@@ -4,9 +4,12 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { Container } from "react-bootstrap";
 import { v4 as uuidV4 } from "uuid";
 
+import NoteLayout from "./Layouts/NoteLayout";
 import NewNote from "./Views/NewNote";
 import NoteList from "./Views/NoteList";
+import EditNote from "./Views/EditNote";
 import useLocalStorage from "./Utils/useLocalStorage";
+import Note from "./Components/Note";
 
 export type Note = {
   id: string;
@@ -59,6 +62,18 @@ function App() {
     setTags((prev) => [...prev, tag]);
   }
 
+  function onUpdateNote(id: string, { tags, ...data }: NoteData) {
+    setNotes((prevNotes) => {
+      return prevNotes.map((note) => {
+        if (note.id === id) {
+          return { ...note, ...data, tagIds: tags.map((tag) => tag.id) };
+        } else {
+          return note;
+        }
+      });
+    });
+  }
+
   return (
     <Container className="my-4">
       <Routes>
@@ -76,9 +91,18 @@ function App() {
             />
           }
         />
-        <Route path="/:id">
-          <Route index element={<> Show</>} />
-          <Route path="edit" element={<> Edit </>} />
+        <Route path="/:id" element={<NoteLayout notes={notesWithTags} />}>
+          <Route index element={<Note />} />
+          <Route
+            path="edit"
+            element={
+              <EditNote
+                onSubmit={onUpdateNote}
+                onAddTag={addTag}
+                availableTags={tags}
+              />
+            }
+          />
         </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

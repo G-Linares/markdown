@@ -1,70 +1,39 @@
 import React, { ReactElement, useMemo, useState } from "react";
-import { Row, Col, Stack, Button, Form, Card, Badge } from "react-bootstrap";
+import { Row, Col, Stack, Button, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import ReactSelect from "react-select";
-import { Tag } from "../App";
-import styles from "./NoteList.module.css";
-
-type SimplifiedNote = {
-  tags: Tag[];
-  title: string;
-  id: string;
-};
+import EditTagsModal from "../Components/EditTagsModal";
+import NoteCard from "../Components/NoteCard";
+import { SimplifiedNote, Tag } from "../Utils/globaltypes";
 
 type NoteListProps = {
   availableTags: Tag[];
   notes: SimplifiedNote[];
+  onDeleteTag: (id: string) => void;
+  onUpdateTag: (id: string, label: string) => void;
 };
-
-function NoteCard({ id, title, tags }: SimplifiedNote) {
-  return (
-    <Card
-      as={Link}
-      to={`/${id}`}
-      className={`h-100 text-reset text-decoration-none ${styles.card}`}
-    >
-      <Card.Body>
-        <Stack
-          gap={2}
-          className="align-items-center justify-content-center h-100"
-        >
-          <span className="fs-5"> {title}</span>
-          {tags.length > 0 && (
-            <Stack
-              gap={1}
-              direction="horizontal"
-              className="justify-content-center flex-wrap"
-            >
-              {tags.map((tag) => (
-                <Badge key={tag.id} className="text-truncate">
-                  {tag.label}
-                </Badge>
-              ))}
-            </Stack>
-          )}
-        </Stack>
-      </Card.Body>
-    </Card>
-  );
-}
 
 export default function NoteList({
   availableTags,
-  notes
+  notes,
+  onDeleteTag,
+  onUpdateTag
 }: NoteListProps): ReactElement {
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [title, setTitle] = useState<string>("");
+  const [editTagsModalIsOpen, setEditTagsModalIsOpen] =
+    useState<boolean>(false);
 
   // estudia esta funcion esta super compleja
   const filteredNotes = useMemo(() => {
     return notes.filter((note) => {
       return (
-        title === "" ||
-        (note.title.toLowerCase().includes(title.toLowerCase()) &&
-          (selectedTags.length === 0 ||
-            selectedTags.every((tag) =>
-              note.tags.some((noteTag) => noteTag.id === tag.id)
-            )))
+        (title === "" ||
+          note.title.toLowerCase().includes(title.toLowerCase())) &&
+        (selectedTags.length === 0 ||
+          selectedTags.every((tag) =>
+            note.tags.some((noteTag) => noteTag.id === tag.id)
+          ))
       );
     });
   }, [title, selectedTags, notes]);
@@ -80,7 +49,12 @@ export default function NoteList({
             <Link to="/new">
               <Button variant="primary">Create</Button>
             </Link>
-            <Button variant="outline-secondary">Edit Tags</Button>
+            <Button
+              onClick={() => setEditTagsModalIsOpen(true)}
+              variant="outline-secondary"
+            >
+              Edit Tags
+            </Button>
           </Stack>
         </Col>
       </Row>
@@ -126,6 +100,13 @@ export default function NoteList({
           </Col>
         ))}
       </Row>
+      <EditTagsModal
+        show={editTagsModalIsOpen}
+        handleClose={() => setEditTagsModalIsOpen(false)}
+        availableTags={availableTags}
+        onDeleteTag={onDeleteTag}
+        onUpdateTag={onUpdateTag}
+      />
     </>
   );
 }

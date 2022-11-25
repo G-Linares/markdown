@@ -5,7 +5,7 @@ import {
   Outlet,
   useOutletContext
 } from "react-router-dom";
-import { Note } from "../App";
+import { Note } from "../Utils/globaltypes";
 
 type NoteLayoutProps = {
   notes: Note[];

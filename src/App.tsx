@@ -10,31 +10,7 @@ import NoteList from "./Views/NoteList";
 import EditNote from "./Views/EditNote";
 import useLocalStorage from "./Utils/useLocalStorage";
 import Note from "./Components/Note";
-
-export type Note = {
-  id: string;
-} & NoteData;
-
-export type RawNote = {
-  id: string;
-} & RawNoteData;
-
-export type RawNoteData = {
-  title: string;
-  markdown: string;
-  tagIds: string[];
-};
-
-export type NoteData = {
-  title: string;
-  markdown: string;
-  tags: Tag[];
-};
-
-export type Tag = {
-  id: string;
-  label: string;
-};
+import { NoteData, RawNote, Tag } from "./Utils/globaltypes";
 
 function App() {
   const [notes, setNotes] = useLocalStorage<RawNote[]>("NOTES", []);
@@ -58,6 +34,12 @@ function App() {
     });
   }
 
+  function onDeleteNote(id: string) {
+    setNotes((prevNotes) => {
+      return prevNotes.filter((note) => note.id !== id);
+    });
+  }
+
   function addTag(tag: Tag) {
     setTags((prev) => [...prev, tag]);
   }
@@ -74,12 +56,37 @@ function App() {
     });
   }
 
+  function updateTag(id: string, label: string) {
+    setTags((prevTags) => {
+      return prevTags.map((tag) => {
+        if (tag.id === id) {
+          return { ...tag, label };
+        } else {
+          return tag;
+        }
+      });
+    });
+  }
+
+  function deleteTag(id: string) {
+    setTags((prevTags) => {
+      return prevTags.filter((tag) => tag.id !== id);
+    });
+  }
+
   return (
     <Container className="my-4">
       <Routes>
         <Route
           path="/"
-          element={<NoteList availableTags={tags} notes={notesWithTags} />}
+          element={
+            <NoteList
+              availableTags={tags}
+              notes={notesWithTags}
+              onUpdateTag={updateTag}
+              onDeleteTag={deleteTag}
+            />
+          }
         />
         <Route
           path="/new"
@@ -92,7 +99,7 @@ function App() {
           }
         />
         <Route path="/:id" element={<NoteLayout notes={notesWithTags} />}>
-          <Route index element={<Note />} />
+          <Route index element={<Note onDelete={onDeleteNote} />} />
           <Route
             path="edit"
             element={
